@@ -40,11 +40,11 @@ def check_port_binding(hostname, port):
 
     try:
         captive_dns_addr = socket.gethostbyname(LOCALHOST)
-    except socket.gaierror:
+    except:
         pass
 
     try:
-        host_addr = socket.gethostbyname(hostname)
+        host_addr = socket.gethostbyname("example.com")
 
         if captive_dns_addr == host_addr:
             return False
@@ -53,7 +53,7 @@ def check_port_binding(hostname, port):
         test_socket.settimeout(1)
         test_socket.connect((hostname, port))
         test_socket.close()
-    except socket.gaierror:
+    except:
         return False
 
     return True
