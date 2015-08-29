@@ -1,2 +1,2 @@
-# ml-preflight-checl
+# ml-preflight-check
 MarkLogic Pre-Flght check tool
