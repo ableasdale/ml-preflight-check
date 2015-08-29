@@ -15,6 +15,9 @@ XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
 MARKLOGIC_PORTS = [7997, 7998, 7999, 8000, 8001, 8002]
 LOCALHOST = "0.0.0.0"
 
+BOUND_WARN = ('\033[91m'+"PORT ALREADY BOUND"+'\033[0m')
+OK = ('\033[92m'+"OK"+'\033[0m')
+
 
 ###################################################################
 # Functions
@@ -31,8 +34,9 @@ def check_port_binding(hostname, port):
             true if the port is already bound.
 
     pydoc -w checkPortBinding"""
-    print("Checking port " + str(port))
+    # print("Checking port " + str(port))
     captive_dns_addr = ""
+    host_addr = ""
 
     try:
         captive_dns_addr = socket.gethostbyname(LOCALHOST)
@@ -54,6 +58,11 @@ def check_port_binding(hostname, port):
 
     return True
 
+def is_port_open(hostname, port):
+    if check_port_binding(hostname,port):
+        print("Checking port {0} \t\t\t {1}".format(str(port),  BOUND_WARN) )
+    else:
+        print("Checking port {0} \t\t\t {1}".format(str(port),  OK) )
 
 def get_xml():
     """Gets XML root
@@ -67,9 +76,10 @@ def get_xml():
 # Main
 ###################################################################
 
+
 # Check ports
 for x in MARKLOGIC_PORTS:
-    print(check_port_binding(LOCALHOST, x))
+    is_port_open(LOCALHOST, x)
 
 # Check journals
 print("Checking Journals for this host [TODO - host]")
