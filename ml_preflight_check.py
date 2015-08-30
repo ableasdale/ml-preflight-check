@@ -117,8 +117,13 @@ for port in MARKLOGIC_PORTS:
 for x in get_xml().findall("a:assignment", XML_NAMESPACES):
     forest_name = x.find("a:forest-name", XML_NAMESPACES).text
     data_directory = x.find("a:data-directory", XML_NAMESPACES).text
-    # print(forest_name + str(data_directory))
-    journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
+
+    if data_directory:
+        # print("Non-default data dir: " + str(data_directory))
+        journal_dir = os.listdir(str(data_directory) + "/Forests/" + forest_name + "/Journals")
+    else:
+        journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
+
     total_jnl_str = pad_with_tabs(("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name),
                                   LINE_WIDTH)
     print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
