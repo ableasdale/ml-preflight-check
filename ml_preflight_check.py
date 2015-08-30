@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-"""MarkLogic pre-flight check"""
+"""MarkLogic pre-flight check tool"""
 
 from __future__ import print_function
 import os
 import socket
-#import psutil
-#import psi.process
 import xml.etree.ElementTree
 
 ###################################################################
@@ -70,21 +68,24 @@ def get_xml():
             parsed XML element tree."""
     return xml.etree.ElementTree.parse(MARKLOGIC_FOREST_ASSIGNMENTS_XML).getroot()
 
+
 def pass_or_fail(value):
-    if (value > 0):
+    if value > 0:
         return CHECK
     else:
         return OK
 
+
 def is_marklogic_running():
-    p = subprocess.Popen(['pgrep', 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
-    total_procs = len(p.splitlines())
+    process_output = subprocess.Popen(['pgrep', 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
+    total_procs = len(process_output.splitlines())
 
-    print (str(total_procs) + " running MarkLogic processes detected\t\t\t [  " + pass_or_fail(total_procs) + "  ]")
+    print(str(total_procs) + " running MarkLogic processes detected\t\t\t [  " + pass_or_fail(total_procs) + "  ]")
 
-    if (total_procs > 0):
-        for x in p.splitlines():
-            print("\t - \tRunning MarkLogic process found with pid: " + x)
+    if total_procs > 0:
+        for pid in process_output.splitlines():
+            print("\t - \tRunning MarkLogic process found with pid: " + pid)
+
 
 ###################################################################
 # Main
@@ -116,7 +117,7 @@ for x in get_xml().findall("a:assignment", XML_NAMESPACES):
     # DIR = '/tmp'
     # print len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))]
 
-#ps = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE).communicate()[0]
+# ps = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE).communicate()[0]
 
 # p = subprocess.Popen(['pgrep', '-l' , 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
 
@@ -126,5 +127,5 @@ for x in get_xml().findall("a:assignment", XML_NAMESPACES):
 # this specifies the number of splits, so the splitted lines
 # will have (nfields+1) elements
 # nfields = len(processes[0].split()) - 1
-#for row in processes[1:]:
+# for row in processes[1:]:
 #    print(row.split(None, nfields))
