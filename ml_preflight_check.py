@@ -27,7 +27,7 @@ def check_port_binding(tcp_port):
     """Check a given TCP port using the hostname (FQDN) to ensure it's not already bound
 
         Args:
-            port: the TCP port.
+            tcp_port: the TCP port.
 
         Returns:
             true if the port is already bound."""
@@ -44,6 +44,14 @@ def check_port_binding(tcp_port):
 
 
 def is_port_open(tcp_port):
+    """Check a given TCP port using the hostname (FQDN) to ensure it's not already bound
+
+        Args:
+            tcp_port: the TCP port.
+
+        Returns:
+            A formatted string to display the status of the port on-screen."""
+
     if check_port_binding(tcp_port):
         print("Checking binding for port {0}: \t\t\t [  {1}  ]".format(str(tcp_port), BOUND_WARN))
     else:
