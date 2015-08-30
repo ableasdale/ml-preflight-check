@@ -17,7 +17,7 @@ XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
 MARKLOGIC_PORTS = [7997, 7998, 7999, 8000, 8001, 8002]
 
 BOUND_WARN = ('\033[31m' + "IN USE" + '\033[0m')
-CHECK = ('\033[31m' + "CHECK" + '\033[0m')
+WARNING = ('\033[31m' + "WARNING" + '\033[0m')
 OK = ('\033[32m' + "OK" + '\033[0m')
 HOSTNAME = ('\033[34m' + socket.getfqdn() + '\033[0m')
 
@@ -69,22 +69,23 @@ def get_xml():
     return xml.etree.ElementTree.parse(MARKLOGIC_FOREST_ASSIGNMENTS_XML).getroot()
 
 
-def pass_or_fail(value):
-    if value > 0:
-        return CHECK
+def pass_or_fail(value, evaluator):
+    if value > evaluator:
+        return WARNING
     else:
         return OK
 
 
 def is_marklogic_running():
+    """Runs pgrep for the MarkLogic process and reports all related process ids (if any)"""
     process_output = subprocess.Popen(['pgrep', 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
     total_procs = len(process_output.splitlines())
 
-    print(str(total_procs) + " running MarkLogic processes detected\t\t\t [  " + pass_or_fail(total_procs) + "  ]")
+    print(str(total_procs) + " running MarkLogic processes detected\t\t\t [  " + pass_or_fail(total_procs, 0) + "  ]")
 
     if total_procs > 0:
         for pid in process_output.splitlines():
-            print("\t - \tRunning MarkLogic process found with pid: " + pid)
+            print("\t - \tRunning MarkLogic process found with pid: " + str(pid))
 
 
 ###################################################################
@@ -103,9 +104,10 @@ for port in MARKLOGIC_PORTS:
 for x in get_xml().findall("a:assignment", XML_NAMESPACES):
     forest_name = x.find("a:forest-name", XML_NAMESPACES).text
     data_directory = x.find("a:data-directory", XML_NAMESPACES).text
-    print(forest_name + str(data_directory))
+    # print(forest_name + str(data_directory))
     journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
-    print(len(journal_dir))
+    print("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name + "\t\t [  " + pass_or_fail(
+        len(journal_dir), 2) + "  ]")
     # for file in dirs:
     #    print(file)
 
