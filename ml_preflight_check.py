@@ -1,24 +1,28 @@
 #!/usr/bin/env python
-"""MarkLogic pre-flight check tool"""
+"""MarkLogic pre-flight check tool v 0.1 - 30/8/15"""
 
 from __future__ import print_function
 import os
 import socket
 import xml.etree.ElementTree
+import subprocess
 
 ###################################################################
 # Global variables
 ###################################################################
-import subprocess
+
+TABWIDTH = 8
+LINE_WIDTH = 56
 
 MARKLOGIC_FOREST_DIRECTORY = "/var/opt/MarkLogic/Forests/"
 MARKLOGIC_FOREST_ASSIGNMENTS_XML = "/var/opt/MarkLogic/assignments.xml"
 XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
 MARKLOGIC_PORTS = [7997, 7998, 7999, 8000, 8001, 8002]
 
-BOUND_WARN = ('\033[31m' + "IN USE" + '\033[0m')
-WARNING = ('\033[31m' + "WARNING" + '\033[0m')
-OK = ('\033[32m' + "OK" + '\033[0m')
+BOUND_WARN = ('[  ' + '\033[31m' + "IN USE" + '\033[0m' + '  ]')
+WARNING = ('[  ' + '\033[31m' + "WARNING" + '\033[0m' + '  ]')
+OK = ('[  ' + '\033[32m' + "OK" + '\033[0m' + '  ]')
+
 HOSTNAME = ('\033[34m' + socket.getfqdn() + '\033[0m')
 
 
@@ -55,10 +59,12 @@ def is_port_open(tcp_port):
         Returns:
             A formatted string to display the status of the port on-screen."""
 
+    port_bindings_str = pad_with_tabs(("TCP binding for port " + str(tcp_port)), LINE_WIDTH)
+
     if check_port_binding(tcp_port):
-        print("Checking binding for port {0}: \t\t\t [  {1}  ]".format(str(tcp_port), BOUND_WARN))
+        print(port_bindings_str + BOUND_WARN)
     else:
-        print("Checking binding for port {0}: \t\t\t [  {1}  ]".format(str(tcp_port), OK))
+        print(port_bindings_str + OK)
 
 
 def get_xml():
@@ -70,6 +76,8 @@ def get_xml():
 
 
 def pass_or_fail(value, evaluator):
+    """Pass it a value and one to eval against and it will return a colour formatted string to say whether condition
+        passes or fails the test"""
     if value > evaluator:
         return WARNING
     else:
@@ -80,12 +88,17 @@ def is_marklogic_running():
     """Runs pgrep for the MarkLogic process and reports all related process ids (if any)"""
     process_output = subprocess.Popen(['pgrep', 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
     total_procs = len(process_output.splitlines())
-
-    print(str(total_procs) + " running MarkLogic processes detected\t\t\t [  " + pass_or_fail(total_procs, 0) + "  ]")
+    ml_procs_str = pad_with_tabs((str(total_procs) + " running MarkLogic processes detected"), LINE_WIDTH)
+    print(ml_procs_str + pass_or_fail(total_procs, 0))
 
     if total_procs > 0:
         for pid in process_output.splitlines():
             print("\t - \tRunning MarkLogic process found with pid: " + str(pid))
+
+
+def pad_with_tabs(string, maxlen):
+    """Formats the line with tab padding for clear on-screen display"""
+    return string + "\t" * ((maxlen - len(string) - 1) / TABWIDTH + 1)
 
 
 ###################################################################
@@ -106,18 +119,41 @@ for x in get_xml().findall("a:assignment", XML_NAMESPACES):
     data_directory = x.find("a:data-directory", XML_NAMESPACES).text
     # print(forest_name + str(data_directory))
     journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
-    print("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name + "\t\t [  " + pass_or_fail(
-        len(journal_dir), 2) + "  ]")
-    # for file in dirs:
-    #    print(file)
+    total_jnl_str = pad_with_tabs(("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name),
+                                  LINE_WIDTH)
+    print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
 
-    ###
-    # simple version for working with CWD
-    # print len([name for name in os.listdir('.') if os.path.isfile(name)])
 
-    # path joining version for other paths
-    # DIR = '/tmp'
-    # print len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO - crap below line
+# for file in dirs:
+#    print(file)
+
+###
+# simple version for working with CWD
+# print len([name for name in os.listdir('.') if os.path.isfile(name)])
+
+# path joining version for other paths
+# DIR = '/tmp'
+# print len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))]
 
 # ps = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE).communicate()[0]
 
