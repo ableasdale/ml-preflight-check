@@ -2,19 +2,24 @@
 """MarkLogic pre-flight check"""
 
 from __future__ import print_function
+import os
 import socket
+#import psutil
+#import psi.process
 import xml.etree.ElementTree
 
 ###################################################################
 # Global variables
 ###################################################################
+import subprocess
 
-MARKLOGIC_FOREST_DIRECTORY = "/var/opt/MarkLogic"
+MARKLOGIC_FOREST_DIRECTORY = "/var/opt/MarkLogic/Forests/"
 MARKLOGIC_FOREST_ASSIGNMENTS_XML = "/var/opt/MarkLogic/assignments.xml"
 XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
 MARKLOGIC_PORTS = [7997, 7998, 7999, 8000, 8001, 8002]
 
 BOUND_WARN = ('\033[31m' + "IN USE" + '\033[0m')
+CHECK = ('\033[31m' + "CHECK" + '\033[0m')
 OK = ('\033[32m' + "OK" + '\033[0m')
 HOSTNAME = ('\033[34m' + socket.getfqdn() + '\033[0m')
 
@@ -65,12 +70,29 @@ def get_xml():
             parsed XML element tree."""
     return xml.etree.ElementTree.parse(MARKLOGIC_FOREST_ASSIGNMENTS_XML).getroot()
 
+def pass_or_fail(value):
+    if (value > 0):
+        return CHECK
+    else:
+        return OK
+
+def is_marklogic_running():
+    p = subprocess.Popen(['pgrep', 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
+    total_procs = len(p.splitlines())
+
+    print (str(total_procs) + " running MarkLogic processes detected\t\t\t [  " + pass_or_fail(total_procs) + "  ]")
+
+    if (total_procs > 0):
+        for x in p.splitlines():
+            print("\t - \tRunning MarkLogic process found with pid: " + x)
 
 ###################################################################
 # Main
 ###################################################################
 
 print("Running pre-flight check for host: " + HOSTNAME)
+# Check MarkLogic is not already running on the host
+is_marklogic_running()
 
 # Check ports
 for port in MARKLOGIC_PORTS:
@@ -81,3 +103,28 @@ for x in get_xml().findall("a:assignment", XML_NAMESPACES):
     forest_name = x.find("a:forest-name", XML_NAMESPACES).text
     data_directory = x.find("a:data-directory", XML_NAMESPACES).text
     print(forest_name + str(data_directory))
+    journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
+    print(len(journal_dir))
+    # for file in dirs:
+    #    print(file)
+
+    ###
+    # simple version for working with CWD
+    # print len([name for name in os.listdir('.') if os.path.isfile(name)])
+
+    # path joining version for other paths
+    # DIR = '/tmp'
+    # print len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))]
+
+#ps = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE).communicate()[0]
+
+# p = subprocess.Popen(['pgrep', '-l' , 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
+
+# out, err = p.communicate()
+
+# processes = ps.split('\n')
+# this specifies the number of splits, so the splitted lines
+# will have (nfields+1) elements
+# nfields = len(processes[0].split()) - 1
+#for row in processes[1:]:
+#    print(row.split(None, nfields))
