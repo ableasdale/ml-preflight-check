@@ -15,8 +15,10 @@ XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
 MARKLOGIC_PORTS = [7997, 7998, 7999, 8000, 8001, 8002]
 LOCALHOST = "0.0.0.0"
 
-BOUND_WARN = ('\033[91m'+"PORT ALREADY BOUND"+'\033[0m')
-OK = ('\033[92m'+"OK"+'\033[0m')
+# BOUND_WARN = ('\033[91m'+"PORT ALREADY BOUND"+'\033[0m')
+# OK = ('\033[92m'+"OK"+'\033[0m')
+BOUND_WARN = ('\033[91m'+"IN USE"+'\033[0m')
+OK = ('\033[32m'+"OK"+'\033[0m')
 
 
 ###################################################################
@@ -60,9 +62,9 @@ def check_port_binding(hostname, port):
 
 def is_port_open(hostname, port):
     if check_port_binding(hostname,port):
-        print("Checking port {0} \t\t\t {1}".format(str(port),  BOUND_WARN) )
+        print("Checking binding for port {0}: \t\t\t [  {1}  ]".format(str(port),  BOUND_WARN) )
     else:
-        print("Checking port {0} \t\t\t {1}".format(str(port),  OK) )
+        print("Checking binding for port {0}: \t\t\t [  {1}  ]".format(str(port),  OK) )
 
 def get_xml():
     """Gets XML root
