@@ -135,7 +135,10 @@ for x in get_xml().findall("{http://marklogic.com/xdmp/assignments}assignment"):
             print("Forest " + forest_name + " is not a directory on this host")
 
     else:
-        journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
-        total_jnl_str = pad_with_tabs(("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name),
+	try:
+            journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
+            total_jnl_str = pad_with_tabs(("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name),
                                       LINE_WIDTH)
-        print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
+            print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
+	except OSError:
+ 	    print("No directory found for "+forest_name)
