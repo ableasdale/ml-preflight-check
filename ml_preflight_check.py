@@ -16,7 +16,7 @@ LINE_WIDTH = 56
 
 MARKLOGIC_FOREST_DIRECTORY = "/var/opt/MarkLogic/Forests/"
 MARKLOGIC_FOREST_ASSIGNMENTS_XML = "/var/opt/MarkLogic/assignments.xml"
-XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
+# XML_NAMESPACES = {'a': 'http://marklogic.com/xdmp/assignments'}
 MARKLOGIC_PORTS = [7997, 7998, 7999, 8000, 8001, 8002]
 
 BOUND_WARN = ('[  ' + '\033[31m' + "IN USE" + '\033[0m' + '  ]')
@@ -72,6 +72,11 @@ def get_xml():
 
         Returns:
             parsed XML element tree."""
+   # try:
+   #     ET.register_namespace('a', 'http://marklogic.com/xdmp/assignments')
+   # except AttributeError:
+   #     def register_namespace(prefix, uri):
+   #         ET._namespace_map[uri] = prefix
     return xml.etree.ElementTree.parse(MARKLOGIC_FOREST_ASSIGNMENTS_XML).getroot()
 
 
@@ -114,61 +119,23 @@ for port in MARKLOGIC_PORTS:
     is_port_open(port)
 
 # Check journals
-for x in get_xml().findall("a:assignment", XML_NAMESPACES):
-    forest_name = x.find("a:forest-name", XML_NAMESPACES).text
-    data_directory = x.find("a:data-directory", XML_NAMESPACES).text
+for x in get_xml().findall("{http://marklogic.com/xdmp/assignments}assignment"):
+    forest_name = x.find("{http://marklogic.com/xdmp/assignments}forest-name").text
+    data_directory = x.find("{http://marklogic.com/xdmp/assignments}data-directory").text
 
     if data_directory:
         # print("Non-default data dir: " + str(data_directory))
-        journal_dir = os.listdir(str(data_directory) + "/Forests/" + forest_name + "/Journals")
+        try:
+            journal_dir = os.listdir(str(data_directory) + "/Forests/" + forest_name + "/Journals")
+            total_jnl_str = pad_with_tabs(
+                ("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name), LINE_WIDTH)
+
+            print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
+        except OSError:
+            print("Forest " + forest_name + " is not a directory on this host")
+
     else:
         journal_dir = os.listdir(MARKLOGIC_FOREST_DIRECTORY + forest_name + "/Journals")
-
-    total_jnl_str = pad_with_tabs(("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name),
-                                  LINE_WIDTH)
-    print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TODO - crap below line
-# for file in dirs:
-#    print(file)
-
-###
-# simple version for working with CWD
-# print len([name for name in os.listdir('.') if os.path.isfile(name)])
-
-# path joining version for other paths
-# DIR = '/tmp'
-# print len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))]
-
-# ps = subprocess.Popen(['ps', 'aux'], stdout=subprocess.PIPE).communicate()[0]
-
-# p = subprocess.Popen(['pgrep', '-l' , 'MarkLogic'], stdout=subprocess.PIPE).communicate()[0]
-
-# out, err = p.communicate()
-
-# processes = ps.split('\n')
-# this specifies the number of splits, so the splitted lines
-# will have (nfields+1) elements
-# nfields = len(processes[0].split()) - 1
-# for row in processes[1:]:
-#    print(row.split(None, nfields))
+        total_jnl_str = pad_with_tabs(("Found " + str(len(journal_dir)) + " journal files for forest " + forest_name),
+                                      LINE_WIDTH)
+        print(total_jnl_str + pass_or_fail(len(journal_dir), 2))
